@@ -1,0 +1,9 @@
+# Mot de passe du compte administrateur
+PASSWORD=
+
+# Adresse de l'envoi de l'email
+MAIL=
+
+# HOST à pinger pour vérifier la connexion
+# HOST_TO_PING=www.google.fr
+

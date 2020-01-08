@@ -7,9 +7,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #   Unless required by applicable law or agreed to in writing,
 #   software distributed under the License is distributed on an
 #   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,33 +19,37 @@
 
 # Script de monitoring et de reboot de bbox
 
-. ${XDG_CONFIG_HOME:-$HOME/.config}/checkBBox
+. ./config
 
-BBOX_IP=${IP_BBOX:-192.168.1.254}
+BBOX_URL="mabbox.bytel.fr"
 HOST_TO_PING=${HOST_TO_PING:-www.google.fr}
 
 reboot_bbox(){
 	# Authentification
-	COOKIE="/var/tmp/cookie-bbox"
-	if [ -e ${COOKIE} ] ; then 
+	COOKIE="/tmp/cookie-bbox"
+	if [ -e ${COOKIE} ]; then
 		echo "Suppression du cookie précédant"
 		rm ${COOKIE}
 	fi
-	curl -d "login=admin&password=${PASSWORD}" -c ${COOKIE}  http://${BBOX_IP}/cgi-bin/login.cgi 2>&1 > /dev/null
-	
+  curl -d "password=${PASSWORD}" -c ${COOKIE}  https://${BBOX_URL}/api/v1/login
+
 	# Récupération du jeton
 	echo "Récupération du jeton"
-	TOKEN=`curl  --cookie ${COOKIE} http://${BBOX_IP}/novice/gtw.htm 2>/dev/null | egrep  "var token = eval\('\([[:blank:]]*.*\)'\);" | sed "s#.*\"\([[:alnum:]_]*\)\".*#\1#g" | head -n 1`
+  TOKEN=`curl -s --cookie ${COOKIE} https://${BBOX_URL}/api/v1/device/token | python -c 'import json,sys;obj=json.load(sys.stdin);print obj[0]["device"]["token"]'`
 
 	# Reboot
 	echo "Reboot de la box"
-	curl -v -d "token=${TOKEN}&fct=reboot" -b ${COOKIE}  http://${BBOX_IP}/cgi-bin/generic.cgi 2> /dev/null
-	if [ $? = 0 ] ; 
-	then 
-		echo "Redémarrage en cours..." 
+  curl -d "" --cookie ${COOKIE} https://mabbox.bytel.fr/api/v1/device/reboot?btoken=${TOKEN}
+	if [ $? = 0 ];
+  then
+		echo "Redémarrage en cours..."
 		# Pause de 2mn pour permettre le redémarrage complet et l'envois du mail
 		sleep 120
-	else 
+    ping -c1 $HOST_TO_PING -W1 2>&1 > /dev/null
+    if [ $? = 0 ] ; then
+      echo "[Bbox] Reboot OK at $(date '+%d/%m/%Y %H:%M')" | mail -s "[Bbox] reboot" ${MAIL}
+    fi
+  else
 		echo "Échec du redémarrage"
 	fi
 
