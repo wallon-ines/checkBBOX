@@ -15,13 +15,13 @@ un redémarrage de la bbox.
 
 ```
 
-	# Mot de passe du compte administrateur
-	PASSWORD=
+  # Mot de passe du compte administrateur
+  PASSWORD=
   # Adresse de l'envoi de l'email
   MAIL=
 
-	# HOST à pinger pour vérifier la connexion
-	# HOST_TO_PING=www.google.fr
+  # HOST à pinger pour vérifier la connexion
+  # HOST_TO_PING=www.google.fr
 ```
 
 3. Programmer l'exécution du script en crontab
